@@ -1,6 +1,9 @@
 package concurrency.question;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,10 +21,12 @@ public class RunInTurn {
 
   static final Object lock = new Object();
   static AtomicInteger atomicInteger = new AtomicInteger(0);
-  static Integer count = 0;
+  static Integer count = 1;
   static Lock reentrantLock = new ReentrantLock();
   static Condition condition = reentrantLock.newCondition();
   static Semaphore semaphore = new Semaphore(1);
+  static CountDownLatch countDownLatch = new CountDownLatch(3);
+  static CyclicBarrier cyclicBarrier = new CyclicBarrier(3);
 
   static class Task3 implements Runnable {
 
@@ -89,6 +94,7 @@ public class RunInTurn {
       }
     }
   }
+
   static class NumTask implements Runnable {
 
 //    总计循环次数
@@ -119,7 +125,6 @@ public class RunInTurn {
       return dividend;
     }
   }
-
 
   static class LockNumTask extends NumTask {
 
@@ -283,6 +288,124 @@ public class RunInTurn {
     }
   }
 
+  static class CountDownNumTask extends NumTask {
+
+    CountDownNumTask(int loopCount, int taskCount, int dividend) {
+      super(loopCount, taskCount, dividend);
+    }
+
+    @Override
+    public void run() {
+      while (true) {
+        synchronized (lock) {
+          if (count > getLoopCount()) {
+            break;
+          }
+          if (count % getTaskCount() == getDividend()) {
+            System.out.println("线程" + getDividend() + "打印：" + count ++);
+          }
+        }
+      }
+      countDownLatch.countDown();
+    }
+  }
+
+  static class JoinNumTask extends NumTask {
+
+    private Thread lastThread;
+    private String name;
+
+    JoinNumTask(int loopCount, int taskCount, int dividend, Thread lastThread, String name) {
+      super(loopCount, taskCount, dividend);
+      this.lastThread = lastThread;
+      this.name = name;
+    }
+
+    @Override
+    public void run() {
+      try {
+        countDownLatch.await();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      if (lastThread != null) {
+        try {
+          lastThread.join();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+      int c = 0;
+      while (c < getLoopCount()) {
+        if (count % getTaskCount() == getDividend()) {
+          System.out.println("线程" + name + "打印：" + count ++);
+        }
+        c ++;
+      }
+    }
+  }
+
+  static class JoinV2NumTask extends NumTask {
+
+    private Thread lastThread;
+    private String name;
+
+    JoinV2NumTask(int loopCount, int taskCount, int dividend, Thread lastThread, String name) {
+      super(loopCount, taskCount, dividend);
+      this.lastThread = lastThread;
+      this.name = name;
+    }
+
+    @Override
+    public void run() {
+      if (lastThread != null) {
+        try {
+          lastThread.join();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+      int c = 0;
+      while (c < getLoopCount()) {
+        if (count % getTaskCount() == getDividend()) {
+          System.out.println("线程" + name + "打印：" + count ++);
+        }
+        c ++;
+      }
+    }
+  }
+
+  static class CyclicNumTask extends NumTask {
+
+    private CyclicBarrier cyclic;
+
+    CyclicNumTask(int loopCount, int taskCount, int dividend, CyclicBarrier cyclicBarrier) {
+      super(loopCount, taskCount, dividend);
+      this.cyclic = cyclicBarrier;
+    }
+
+    @Override
+    public void run() {
+      while (true) {
+        synchronized (lock) {
+          if (count > getLoopCount()) {
+            break;
+          }
+          if (count % getTaskCount() == getDividend()) {
+            System.out.println("线程" + getDividend() + "打印：" + count ++);
+          }
+        }
+      }
+      System.out.println("线程" + getDividend() + "到达屏障");
+      try {
+        cyclic.await();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      } catch (BrokenBarrierException e) {
+        e.printStackTrace();
+      }
+    }
+  }
 
 
 
@@ -352,13 +475,32 @@ public class RunInTurn {
 //    new Thread(new SemaphoreNumTask(100, 3, 1)).start();
 //    new Thread(new SemaphoreNumTask(100, 3, 2)).start();
 //    10.通过阻塞队列，每个线程从阻塞队列中取出数，+1放入下一个队列中
-    BlockingQueue<Integer> queue1 = new LinkedBlockingQueue<>();
-    BlockingQueue<Integer> queue2 = new LinkedBlockingQueue<>();
-    BlockingQueue<Integer> queue3 = new LinkedBlockingQueue<>();
-    queue1.add(0);
-    new Thread(new QueueNumTask(100, 3, 0, queue1, queue2)).start();
-    new Thread(new QueueNumTask(100, 3, 1, queue2, queue3)).start();
-    new Thread(new QueueNumTask(100, 3, 2, queue3, queue1)).start();
+//    BlockingQueue<Integer> queue1 = new LinkedBlockingQueue<>();
+//    BlockingQueue<Integer> queue2 = new LinkedBlockingQueue<>();
+//    BlockingQueue<Integer> queue3 = new LinkedBlockingQueue<>();
+//    queue1.add(0);
+//    new Thread(new QueueNumTask(100, 3, 0, queue1, queue2)).start();
+//    new Thread(new QueueNumTask(100, 3, 1, queue2, queue3)).start();
+//    new Thread(new QueueNumTask(100, 3, 2, queue3, queue1)).start();
+//    11.1，2，3三个线程交替打印完之后，通知4，5，6线程顺序打印
+//    通过sync确保前三个线程依次运行（注意break条件写在synchronized里，类似于双检锁），通过countdownlatch统计运行完线程数，后三个线程通过join依次运行
+//    new Thread(new CountDownNumTask(90, 3, 0)).start();
+//    new Thread(new CountDownNumTask(90, 3, 1)).start();
+//    new Thread(new CountDownNumTask(90, 3, 2)).start();
+//    Thread A = new Thread(new JoinNumTask(30, 1, 0, null, "线程A"));
+//    Thread B = new Thread(new JoinNumTask(30, 1, 0, A, "线程B"));
+//    Thread C = new Thread(new JoinNumTask(30, 1, 0, B, "线程C"));
+//    A.start();
+//    B.start();
+//    C.start();
+//    12.同理通过CyclicBarrier可实现
+    Runnable A = new JoinV2NumTask(30, 1, 0, null, "线程A");
+    CyclicBarrier cyclic = new CyclicBarrier(2, A);
+    new Thread(new CyclicNumTask(90, 3, 0, cyclic)).start();
+    new Thread(new CyclicNumTask(90, 3, 1, cyclic)).start();
+    new Thread(new CyclicNumTask(90, 3, 2, cyclic)).start();
+//    Thread B = new Thread(new JoinNumTask(30, 1, 0, A, "线程B"));
+//    Thread C = new Thread(new JoinNumTask(30, 1, 0, B, "线程C"));
 
   }
 
