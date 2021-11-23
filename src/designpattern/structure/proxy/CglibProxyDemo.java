@@ -1,4 +1,4 @@
-package designpattern.proxy;
+package designpattern.structure.proxy;
 
 public class CglibProxyDemo {
 

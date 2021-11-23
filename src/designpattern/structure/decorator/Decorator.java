@@ -1,4 +1,4 @@
-package designpattern.decorator;
+package designpattern.structure.decorator;
 
 public class Decorator implements Future {
 

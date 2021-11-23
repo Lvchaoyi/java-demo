@@ -1,4 +1,4 @@
-package designpattern.adapter;
+package designpattern.structure.adapter;
 
 // 适配类通过继承需要适配的对象并实现目标接口，相当于把两个不相关的组件和功能进行适配
 public class Adapter extends Adaptee implements Target {

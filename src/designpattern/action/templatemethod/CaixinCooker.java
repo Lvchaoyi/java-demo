@@ -1,4 +1,4 @@
-package designpattern.templatemethod;
+package designpattern.action.templatemethod;
 
 public class CaixinCooker extends AbstractCooker {
 

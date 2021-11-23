@@ -1,4 +1,4 @@
-package designpattern.templatemethod;
+package designpattern.action.templatemethod;
 /**
  * 抽象炒菜类
  *

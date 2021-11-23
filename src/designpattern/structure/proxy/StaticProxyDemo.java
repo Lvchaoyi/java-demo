@@ -1,4 +1,4 @@
-package designpattern.proxy;
+package designpattern.structure.proxy;
 /**
  * 静态代理，就是在代码编译之前定义好的代理类
  *
@@ -9,6 +9,7 @@ public class StaticProxyDemo implements Feature {
 
   private Feature target;
 
+  // 代理类一般都会屏蔽对被代理对象的访问，外界根本不知道有被代理对象的存在，这也是和装饰器模式关键的区别之一
   StaticProxyDemo() {
     this.target = new Target();
   }
