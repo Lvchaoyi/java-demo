@@ -9,8 +9,8 @@ public class StaticProxyDemo implements Feature {
 
   private Feature target;
 
-  StaticProxyDemo(Feature target) {
-    this.target = target;
+  StaticProxyDemo() {
+    this.target = new Target();
   }
 
   @Override
@@ -21,6 +21,22 @@ public class StaticProxyDemo implements Feature {
   }
 
   public static void main(String[] args) {
-    new StaticProxyDemo(new Target()).doSomething();
+    new StaticProxyDemo().doSomething();
   }
 }
+
+interface Feature {
+
+  void doSomething();
+
+}
+
+// 被代理的对象
+class Target implements Feature {
+
+  @Override
+  public void doSomething() {
+    System.out.println("被代理对象开始做事了。。。");
+  }
+}
+
