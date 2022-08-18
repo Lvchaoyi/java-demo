@@ -1,0 +1,22 @@
+//指定proto3格式
+syntax = "proto3";
+
+//生成代码设置
+option java_multiple_files = true;
+option java_package = "io.grpc.hello";
+option java_outer_classname = "HelloProto";
+option objc_class_prefix = "HLW";
+
+package hello;
+
+service HelloService{
+  rpc Say(HelloRequest) returns (HelloReply) {}
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}
