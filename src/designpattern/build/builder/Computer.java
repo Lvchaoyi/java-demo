@@ -1,5 +1,6 @@
 package designpattern.build.builder;
 
+// 缺点是一旦初始化，修改属性很不方便，所以一般适用于恒定参数的对象
 public class Computer {
 
   private String cpu;//必须
