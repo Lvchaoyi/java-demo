@@ -7,9 +7,10 @@ package algorithm;
  */
 public class QuickSort {
     public int[] quickSort(int[] nums) {
-        sort(nums, 0, nums.length - 1);
+//        sort(nums, 0, nums.length - 1);
+        sortV2(nums, 0, nums.length - 1);
         for (int num : nums) {
-            System.out.println(num);
+            System.out.print(num + " ");
         }
         return nums;
     }
@@ -57,7 +58,34 @@ public class QuickSort {
         return j;
     }
 
+    public void sortV2(int[] nums, int left, int right) {
+        if (left >= right) {
+            return;
+        }
+        // 移动指针i初始值取和lo一样
+        int lo = left, hi = right, i = lo;
+        int seed = nums[left];
+        while (i <= hi) {
+            if (nums[i] > seed) {
+                exch(nums, hi --, i);
+            } else if (nums[i] < seed) {
+                exch(nums, lo ++, i);
+            } else {
+                i ++;
+            }
+        }
+        // 从lo到hi的值都是seed值，不需要进行二次排序
+        sortV2(nums, left, lo - 1);
+        sortV2(nums, hi + 1, right);
+    }
+
+    public void exch(int[] nums, int i, int j) {
+        int temp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = temp;
+    }
+
     public static void main(String[] args) {
-        new QuickSort().quickSort(new int[]{5, 5,5,2,1,5,7,8,834,2,53,1,6,7,9});
+        new QuickSort().quickSort(new int[]{3,1,2,1,3,3,2,2,1,1,2,3});
     }
 }
