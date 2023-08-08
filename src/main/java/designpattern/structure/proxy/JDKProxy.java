@@ -26,7 +26,12 @@ public class JDKProxy implements InvocationHandler {
 
     public static void main(String[] args) {
         Feature instance = new Target();
-        Feature feature = (Feature) Proxy.newProxyInstance(instance.getClass().getClassLoader(), instance.getClass().getInterfaces(), new JDKProxy(instance));
+        Feature feature = (Feature) Proxy.newProxyInstance(
+                instance.getClass().getClassLoader(),
+                // 必须要实现接口，然后jdk代理通过反射获取对象的接口才能执行对应方法
+                instance.getClass().getInterfaces(),
+                new JDKProxy(instance)
+        );
         feature.doSomething();
     }
 }
