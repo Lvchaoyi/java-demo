@@ -1,3 +1,4 @@
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
@@ -518,8 +519,30 @@ public class Solution {
         return dp[nums.length - 1][target];
     }
 
+    public boolean wordBreak(String s, List<String> wordDict) {
+        Map<String, Boolean> map = new HashMap<>();
+        boolean[] dp = new boolean[s.length() + 1];
+        dp[0] = true;
+        for (String word : wordDict) {
+            map.put(word, true);
+        }
+        for (int i = 1; i <= s.length(); i ++) {
+            if (dp[i]) {
+                continue;
+            }
+            for (int j = 1; j <= 20 && i - j >= 0 && !dp[i]; j ++) {
+                String sub = s.substring(i - j, i);
+                if (map.get(sub) != null) {
+                    dp[i] = dp[i - j];
+                }
+            }
+        }
+
+        return dp[s.length()];
+    }
+
     public static void main(String[] args) {
-        new Solution().findTargetSumWays(new int[]{0,0,0,0,0,0,0,0,1}, 3);
+        new Solution().wordBreak("dogs", Lists.newArrayList("dog", "s", "gs"));
     }
 
 }
